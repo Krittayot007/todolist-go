@@ -26,4 +26,5 @@ func TodoRouter(server models.Server, PATH string) {
 	todoController := todo_controller.NewTodoController(db)
 
 	todoRouter.GET("/getTodoWithUserId", todoController.GetAllTodoWithUserId)
+	todoRouter.POST("/createTodo/:userId", todoController.CreateTodo)
 }

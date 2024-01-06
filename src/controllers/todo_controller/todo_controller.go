@@ -9,6 +9,7 @@ import (
 
 type TodoController interface {
 	GetAllTodoWithUserId(*gin.Context)
+	CreateTodo(*gin.Context)
 }
 
 type todoController struct {
@@ -34,8 +35,8 @@ func (t todoController) GetAllTodoWithUserId(c *gin.Context) {
 	resultSql, errorQuery := t.db.Query(rawString)
 
 	if errorQuery != nil {
-		fmt.Println("Error !!", errorQuery)
-		c.JSON(500, errorQuery)
+		fmt.Println("Error !!", errorQuery.Error())
+		c.JSON(500, errorQuery.Error())
 	}
 	defer resultSql.Close()
 
@@ -50,4 +51,31 @@ func (t todoController) GetAllTodoWithUserId(c *gin.Context) {
 		todos = append(todos, todo)
 	}
 	c.JSON(200, todos)
+}
+
+func (t todoController) CreateTodo(c *gin.Context) {
+	params := c.Params
+	userId := params[0].Value
+
+	var dataCreate Todolist
+	errorRequest := c.BindJSON(&dataCreate)
+	fmt.Printf("data from req.body %+v", errorRequest)
+
+	if errorRequest != nil {
+		fmt.Printf("Error !! %+v", errorRequest.Error())
+	}
+
+	rawString := fmt.Sprintf("INSERT INTO todolists (status, description, title, user_id) VALUES (?, ?, ?, ?)")
+	create, _ := t.db.Prepare(rawString)
+	createResult, createError := create.Exec(&dataCreate.Status, &dataCreate.Description, &dataCreate.Title, &userId)
+
+	if createError != nil {
+		fmt.Println("Error!!", createError.Error())
+		c.JSON(500, createError.Error())
+	}
+	defer create.Close()
+
+	c.JSON(201, createResult)
+	// token := c.GetHeader("Authorization") get header for token
+
 }
